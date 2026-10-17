@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b3b3c">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>نور - القراءة</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@700&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--deep:#0b3b3c;--teal:#13686a;--glow:#f6d77a;--gold:#d9aa45;--paper:#fff8e6;--ink:#1d2b2b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Cairo',Tahoma,sans-serif;color:var(--paper);min-height:100vh;
+    background:radial-gradient(circle at 50% 0%,#1f8a88 0%,var(--teal) 35%,var(--deep) 100%) fixed}
+  header{position:sticky;top:0;z-index:5;background:rgba(11,59,60,.94);backdrop-filter:blur(6px);
+    padding:14px 16px;border-bottom:1px solid rgba(217,170,69,.4)}
+  .top{display:flex;align-items:center;justify-content:space-between;max-width:720px;margin:0 auto}
+  .top h1{font-family:'Amiri',serif;font-size:28px;color:var(--glow)}
+  .back,.tool{color:var(--paper);background:none;text-decoration:none;border:1px solid var(--gold);
+    border-radius:10px;padding:6px 14px;font:500 15px 'Cairo',sans-serif;cursor:pointer}
+  a:focus-visible,button:focus-visible,input:focus-visible,.card:focus-visible{outline:3px solid var(--glow);outline-offset:2px}
+  .search{display:block;width:100%;max-width:720px;margin:10px auto 0;padding:12px 16px;border-radius:12px;
+    border:1px solid var(--gold);background:rgba(255,248,230,.1);color:var(--paper);font:500 16px 'Cairo',sans-serif}
+  .search::placeholder{color:rgba(255,248,230,.6)}
+
+  /* قائمة السور */
+  #list{max-width:720px;margin:14px auto;padding:0 12px 30px;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .card{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;cursor:pointer;
+    background:rgba(11,59,60,.5);border:1px solid transparent}
+  .card:hover{background:rgba(11,59,60,.85);border-color:var(--gold)}
+  .num{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;
+    border:2px solid var(--gold);font-weight:700;font-size:14px;color:var(--glow)}
+  .nm{font-family:'Amiri',serif;font-size:21px;font-weight:700}
+
+  /* صفحة القراءة */
+  #reader{display:none;max-width:720px;margin:14px auto;padding:0 12px 40px}
+  .sheet{background:var(--paper);color:var(--ink);border:4px double var(--gold);border-radius:18px;
+    padding:28px 22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .title{text-align:center;font-family:'Amiri',serif;font-size:34px;font-weight:700;color:var(--teal);
+    border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:16px}
+  .bism{text-align:center;font-family:'Amiri Quran',serif;font-size:30px;margin-bottom:14px}
+  #text{font-family:'Amiri Quran',serif;font-size:30px;line-height:2.4;text-align:justify}
+  .ay{font-size:.6em;color:var(--gold);margin-inline:4px;white-space:nowrap}
+  .msg{text-align:center;padding:30px;color:var(--teal)}
+  .nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+  .nav button{flex:1;padding:12px;border-radius:12px;border:2px solid var(--gold);cursor:pointer;
+    background:rgba(11,59,60,.6);color:var(--paper);font:700 16px 'Cairo',sans-serif}
+  .nav button:disabled{opacity:.35;cursor:default}
+  .tools{display:flex;gap:8px}
+  .credit{text-align:center;direction:ltr;font:500 14px 'Cairo',sans-serif;color:var(--glow);opacity:.85;letter-spacing:.3px}
+  footer.credit{margin:10px 0 24px}
+  #offline{max-width:720px;margin:14px auto 0;padding:0 12px}
+  .ob{background:rgba(11,59,60,.6);border:1px solid var(--gold);border-radius:14px;padding:12px;text-align:center}
+  .ob button{margin:4px;padding:10px 16px;border-radius:10px;border:2px solid var(--gold);cursor:pointer;
+    background:var(--gold);color:var(--deep);font:700 15px 'Cairo',sans-serif}
+  .ob button.alt{background:none;color:var(--paper)}
+  .ob button:disabled{opacity:.5;cursor:default}
+  #ost{font-size:14px;color:var(--glow);margin-top:6px;min-height:20px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1 id="h">القراءة</h1>
+    <div class="tools">
+      <button class="tool" id="minus" aria-label="تصغير الخط" hidden>أ-</button>
+      <button class="tool" id="plus" aria-label="تكبير الخط" hidden>أ+</button>
+      <a class="back" id="back" href="noor.html">الرئيسية</a>
+    </div>
+  </div>
+  <input class="search" id="q" type="search" placeholder="ابحث عن سورة (بالاسم أو الرقم)">
+</header>
+
+<div id="offline">
+  <div class="ob">
+    <button id="dl">تحميل المصحف كاملًا للقراءة بدون إنترنت</button>
+    <button id="save" class="alt">حفظ كملف quran-data.js</button>
+    <div id="ost"></div>
+  </div>
+</div>
+
+<div id="list"></div>
+
+<section id="reader">
+  <div class="sheet">
+    <div class="title" id="title"></div>
+    <div class="bism" id="bism">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
+    <div id="text"></div>
+  </div>
+  <div class="nav">
+    <button id="next">السورة التالية</button>
+    <button id="prev">السورة السابقة</button>
+  </div>
+</section>
+
+<footer class="credit">By Mahdi Albna</footer>
+
+<script src="quran-data.js"></script>
+<script>
+  const surahs = "الفاتحة،البقرة،آل عمران،النساء،المائدة،الأنعام،الأعراف،الأنفال،التوبة،يونس،هود،يوسف،الرعد،إبراهيم،الحجر،النحل،الإسراء،الكهف،مريم،طه،الأنبياء،الحج،المؤمنون،النور،الفرقان،الشعراء،النمل،القصص،العنكبوت،الروم،لقمان،السجدة،الأحزاب،سبأ،فاطر،يس،الصافات،ص،الزمر،غافر،فصلت،الشورى،الزخرف،الدخان،الجاثية،الأحقاف،محمد،الفتح،الحجرات،ق،الذاريات،الطور،النجم،القمر،الرحمن،الواقعة،الحديد،المجادلة،الحشر،الممتحنة،الصف،الجمعة،المنافقون،التغابن،الطلاق،التحريم،الملك،القلم،الحاقة،المعارج،نوح،الجن،المزمل،المدثر،القيامة،الإنسان،المرسلات،النبأ،النازعات،عبس،التكوير،الانفطار،المطففين،الانشقاق،البروج،الطارق،الأعلى،الغاشية،الفجر،البلد،الشمس،الليل،الضحى،الشرح،التين،العلق،القدر،البينة،الزلزلة،العاديات،القارعة،التكاثر،العصر،الهمزة،الفيل،قريش،الماعون،الكوثر،الكافرون،النصر،المسد،الإخلاص،الفلق،الناس".split("،");
+
+  const $ = id => document.getElementById(id);
+  let current = 0, size = +(localStorage.getItem("noorSize") || 30);
+
+  // يحوّل الرقم إلى أرقام عربية
+  const ar = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+
+  function renderList(filter = "") {
+    const f = filter.trim();
+    $("list").innerHTML = "";
+    surahs.forEach((n, i) => {
+      if (f && !n.includes(f) && String(i + 1) !== f) return;
+      const c = document.createElement("div");
+      c.className = "card"; c.tabIndex = 0;
+      c.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="nm">' + n + '</span>';
+      c.onclick = () => open(i + 1);
+      c.onkeydown = e => { if (e.key === "Enter") open(i + 1); };
+      $("list").appendChild(c);
+    });
+  }
+
+  async function getSurah(n) {
+    if (window.QURAN_DATA && window.QURAN_DATA[n]) return window.QURAN_DATA[n];  // ملف quran-data.js
+    const key = "noor-surah-" + n;
+    const saved = localStorage.getItem(key);          // تُحفظ السورة بعد أول تحميل
+    if (saved) return JSON.parse(saved);
+    const res = await fetch("https://api.alquran.cloud/v1/surah/" + n + "/quran-uthmani");
+    if (!res.ok) throw new Error("fetch failed");
+    const ayahs = (await res.json()).data.ayahs.map(a => a.text);
+    try { localStorage.setItem(key, JSON.stringify(ayahs)); } catch (e) {}
+    return ayahs;
+  }
+
+  async function open(n) {
+    if (n < 1 || n > 114) return;
+    current = n;
+    history.replaceState(null, "", "#" + n);
+    $("list").style.display = "none";
+    $("offline").style.display = "none";
+    $("q").style.display = "none";
+    $("reader").style.display = "block";
+    $("minus").hidden = $("plus").hidden = false;
+    $("h").textContent = "سورة " + surahs[n - 1];
+    $("title").textContent = "سورة " + surahs[n - 1];
+    $("back").textContent = "السور";
+    $("back").href = "#";
+    $("bism").style.display = (n === 1 || n === 9) ? "none" : "block";
+    $("prev").disabled = n === 1;
+    $("next").disabled = n === 114;
+    $("text").innerHTML = '<p class="msg">جارٍ التحميل...</p>';
+    window.scrollTo(0, 0);
+    try {
+      const ayahs = await getSurah(n);
+      if (current !== n) return;
+      $("text").innerHTML = ayahs.map((t, i) => {
+        // نحذف البسملة من أول آية (ما عدا الفاتحة) لأنها معروضة أعلاه
+        if (i === 0 && n !== 1 && n !== 9) t = t.split(" ").slice(4).join(" ");
+        return t + ' <span class="ay">﴿' + ar(i + 1) + '﴾</span>';
+      }).join(" ");
+    } catch (e) {
+      $("text").innerHTML = '<p class="msg">تعذّر تحميل السورة. تأكد من اتصالك بالإنترنت وأعد المحاولة.</p>';
+    }
+  }
+
+  function showList() {
+    current = 0;
+    history.replaceState(null, "", location.pathname);
+    $("reader").style.display = "none";
+    $("list").style.display = "grid";
+    $("offline").style.display = "block";
+    $("q").style.display = "block";
+    $("minus").hidden = $("plus").hidden = true;
+    $("h").textContent = "القراءة";
+    $("back").textContent = "الرئيسية";
+    $("back").href = "noor.html";
+  }
+
+  $("back").onclick = e => { if (current) { e.preventDefault(); showList(); } };
+  $("next").onclick = () => open(current + 1);
+  $("prev").onclick = () => open(current - 1);
+  $("q").oninput = e => renderList(e.target.value);
+
+  function applySize() { $("text").style.fontSize = size + "px"; localStorage.setItem("noorSize", size); }
+  $("plus").onclick = () => { size = Math.min(52, size + 2); applySize(); };
+  $("minus").onclick = () => { size = Math.max(20, size - 2); applySize(); };
+
+  // ===== القراءة بدون إنترنت =====
+  const isCached = n => (window.QURAN_DATA && window.QURAN_DATA[n]) || localStorage.getItem("noor-surah-" + n);
+  const cachedCount = () => { let c = 0; for (let i = 1; i <= 114; i++) if (isCached(i)) c++; return c; };
+
+  function offlineStatus() {
+    const c = cachedCount();
+    $("ost").textContent = c === 114 ? "المصحف كاملًا جاهز للقراءة بدون إنترنت ✓"
+      : c ? "تم تحميل " + c + " من 114 سورة" : "لم يتم تحميل المصحف بعد";
+    $("dl").disabled = c === 114;
+  }
+
+  async function downloadAll() {
+    $("dl").disabled = true;
+    try {
+      for (let i = 1; i <= 114; i++) {
+        $("ost").textContent = "جارٍ التحميل... " + i + " / 114";
+        await getSurah(i);
+      }
+    } catch (e) {
+      $("ost").textContent = "انقطع التحميل. أعد المحاولة وسيكمل من حيث توقف.";
+      $("dl").disabled = false;
+      return;
+    }
+    offlineStatus();
+  }
+
+  async function saveFile() {
+    if (cachedCount() < 114) await downloadAll();
+    if (cachedCount() < 114) return;
+    const data = {};
+    for (let i = 1; i <= 114; i++) data[i] = await getSurah(i);
+    const blob = new Blob(["window.QURAN_DATA=" + JSON.stringify(data) + ";"], {type: "text/javascript"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "quran-data.js";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  $("dl").onclick = downloadAll;
+  $("save").onclick = saveFile;
+  offlineStatus();
+
+  renderList();
+  applySize();
+  const start = parseInt(location.hash.slice(1));
+  if (start >= 1 && start <= 114) open(start);
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>
+</body>
+</html>
